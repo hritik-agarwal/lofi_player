@@ -13,5 +13,6 @@ export const fontFamily = {
 export const images = {
   play: require('./assets/images/icons/play.png'),
   pause: require('./assets/images/icons/pause.png'),
+  plus: require('./assets/images/icons/plus.png'),
   waveform: require('./assets/images/icons/soundwave.gif'),
 };

@@ -12,21 +12,26 @@ import TrackPlayer, {RepeatMode} from 'react-native-track-player';
 import {styles} from './AppStyles';
 import {hp, images} from './constants';
 import {musicList} from './musicList';
-import Slider from 'react-native-slider';
+import Slider from '@react-native-community/slider';
+import Modal from 'react-native-modal';
 
 const App = () => {
-  const [playing, setPlaying] = useState(false);
   const [activeId, setActiveId] = useState(0);
+  const [playing, setPlaying] = useState(false);
   const [musicAdded, setMusicAdded] = useState(false);
-  const [themeColor, setThemeColor] = useState('');
+  const [themeColor, setThemeColor] = useState('pink');
+  const [showMixMusicModal, setShowMixMusicModal] = useState(false);
+
+  const closeModal = () => setShowMixMusicModal(false);
+
   const scrollY = useRef(new Animated.Value(0)).current;
   const playerHeightAnim = scrollY.interpolate({
-    inputRange: [0, hp(30) - hp(10) * 2],
+    inputRange: [0, (hp(30) - hp(10)) * 2],
     outputRange: [hp(30), hp(10)],
     extrapolate: 'clamp',
   });
   const waveformHeightAnim = scrollY.interpolate({
-    inputRange: [0, hp(30) - hp(10) * 2],
+    inputRange: [0, (hp(30) - hp(10)) * 2],
     outputRange: [hp(20), hp(0)],
     extrapolate: 'clamp',
   });
@@ -104,7 +109,25 @@ const App = () => {
     );
   };
 
-  const renderItem = ({item, index}) => {
+  const renderItemLofiMusic = ({item, index}) => {
+    return (
+      <View key={index} style={styles.musicCard}>
+        <FastImage
+          resizeMode="cover"
+          source={item.musicCover}
+          style={styles.musicCover}
+        />
+        <TouchableOpacity onPress={() => setActiveId(index)}>
+          <Text
+            style={[styles.musicName, activeId === index && {color: 'white'}]}>
+            {item.name}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
+  const renderItemWhiteMusic = ({item, index}) => {
     return (
       <View key={index} style={styles.musicCard}>
         <FastImage
@@ -118,11 +141,12 @@ const App = () => {
           </TouchableOpacity>
           <Slider
             value={0.2}
+            tapToSeek={true}
             style={styles.progressBar}
-            maximumTrackTintColor={'grey'}
-            onValueChange={val => valueChange(val, index)}
             thumbTintColor={themeColor}
+            maximumTrackTintColor={'grey'}
             minimumTrackTintColor={themeColor}
+            onValueChange={val => valueChange(val, index)}
           />
         </View>
       </View>
@@ -159,8 +183,29 @@ const App = () => {
         onScroll={onScroll}
         showsVerticalScrollIndicator={false}
         style={styles.musicList}
-        renderItem={renderItem}
+        renderItem={renderItemLofiMusic}
       />
+      <TouchableOpacity
+        onPress={() => setShowMixMusicModal(true)}
+        style={[styles.plusIconBox, {backgroundColor: themeColor}]}>
+        <FastImage
+          resizeMode="contain"
+          source={images.plus}
+          style={styles.plusIcon}
+        />
+      </TouchableOpacity>
+      <Modal isVisible={showMixMusicModal} onBackdropPress={closeModal}>
+        <View style={styles.modalContainer}>
+          <Text style={styles.mixMusicText}>Mix White Music</Text>
+          <FlatList
+            data={musicList}
+            decelerationRate={0.99}
+            style={styles.musicList}
+            renderItem={renderItemWhiteMusic}
+            showsVerticalScrollIndicator={false}
+          />
+        </View>
+      </Modal>
     </View>
   );
 };
