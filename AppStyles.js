@@ -16,12 +16,11 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   headerText: {
-    color: 'pink',
     fontSize: wp(8),
     fontFamily: fontFamily.COOKIE_REGULAR,
   },
   playerContainer: {
-    paddingTop: hp(5),
+    paddingTop: hp(3),
     backgroundColor: 'black',
   },
   playerBox: {
@@ -30,7 +29,6 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: wp(10),
-    backgroundColor: 'pink',
   },
   playerMusicCard: {
     width: '100%',
@@ -39,10 +37,22 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  playerMusicName: {
-    zIndex: 1,
+  playerMusicInfo: {
     position: 'absolute',
-    fontSize: wp(12),
+    zIndex: 1,
+    flexDirection: 'column',
+    alignItems: 'center',
+  },
+  waveform: {
+    width: wp(90),
+    height: hp(20),
+  },
+  waveformImage: {
+    width: '100%',
+    height: '100%',
+  },
+  playerMusicName: {
+    fontSize: wp(10),
     color: 'white',
     fontFamily: fontFamily.COOKIE_REGULAR,
   },
@@ -50,12 +60,13 @@ export const styles = StyleSheet.create({
     position: 'absolute',
     bottom: wp(2),
     right: wp(2),
+    height: hp(8),
+    aspectRatio: 1,
   },
   playIcon: {
-    width: wp(16),
-    aspectRatio: 1,
-    borderRadius: wp(8),
-    backgroundColor: 'pink',
+    width: '100%',
+    height: '100%',
+    borderRadius: wp(10),
   },
   musicList: {},
   musicCard: {
@@ -78,6 +89,10 @@ export const styles = StyleSheet.create({
     paddingVertical: hp(2),
     fontFamily: fontFamily.COOKIE_REGULAR,
     width: wp(65),
+  },
+  progressBar: {
+    width: wp(55),
+    marginLeft: wp(10),
   },
   overalay: {
     width: '100%',

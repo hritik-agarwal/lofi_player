@@ -9,19 +9,25 @@ import {
   FlatList,
 } from 'react-native';
 import TrackPlayer, {RepeatMode} from 'react-native-track-player';
-
 import {styles} from './AppStyles';
 import {hp, images} from './constants';
 import {musicList} from './musicList';
+import Slider from 'react-native-slider';
 
 const App = () => {
   const [playing, setPlaying] = useState(false);
   const [activeId, setActiveId] = useState(0);
   const [musicAdded, setMusicAdded] = useState(false);
+  const [themeColor, setThemeColor] = useState('');
   const scrollY = useRef(new Animated.Value(0)).current;
   const playerHeightAnim = scrollY.interpolate({
-    inputRange: [0, hp(50) - hp(10) * 2],
-    outputRange: [hp(50), hp(10)],
+    inputRange: [0, hp(30) - hp(10) * 2],
+    outputRange: [hp(30), hp(10)],
+    extrapolate: 'clamp',
+  });
+  const waveformHeightAnim = scrollY.interpolate({
+    inputRange: [0, hp(30) - hp(10) * 2],
+    outputRange: [hp(20), hp(0)],
     extrapolate: 'clamp',
   });
 
@@ -53,16 +59,34 @@ const App = () => {
     await TrackPlayer.pause();
   };
 
+  const valueChange = (val, index) => {
+    // console.log({val}, {index});
+  };
+
   const playerBox = () => {
-    const {name, musicCover, musicFile} = musicList[activeId];
+    const {name, musicCover} = musicList[activeId];
     return (
       <View style={styles.playerContainer}>
-        <Animated.View style={[styles.playerBox, {height: playerHeightAnim}]}>
+        <Animated.View
+          style={[
+            styles.playerBox,
+            {height: playerHeightAnim, backgroundColor: themeColor},
+          ]}>
           <FastImage
             resizeMode="cover"
             source={musicCover}
             style={styles.playerMusicCard}>
-            <Text style={styles.playerMusicName}>{name}</Text>
+            <View style={styles.playerMusicInfo}>
+              <Animated.View
+                style={[styles.waveform, {height: waveformHeightAnim}]}>
+                <FastImage
+                  resizeMode="contain"
+                  style={styles.waveformImage}
+                  source={images.waveform}
+                />
+              </Animated.View>
+              <Text style={styles.playerMusicName}>{name}</Text>
+            </View>
             <View style={styles.overalay} />
           </FastImage>
           <TouchableOpacity
@@ -71,7 +95,7 @@ const App = () => {
             activeOpacity={0.7}>
             <FastImage
               resizeMode="contain"
-              style={styles.playIcon}
+              style={[styles.playIcon, {backgroundColor: themeColor}]}
               source={playing ? images.pause : images.play}
             />
           </TouchableOpacity>
@@ -88,9 +112,19 @@ const App = () => {
           source={item.musicCover}
           style={styles.musicCover}
         />
-        <TouchableOpacity onPress={() => setActiveId(index)}>
-          <Text style={styles.musicName}>{item.name}</Text>
-        </TouchableOpacity>
+        <View>
+          <TouchableOpacity onPress={() => setActiveId(index)}>
+            <Text style={styles.musicName}>{item.name}</Text>
+          </TouchableOpacity>
+          <Slider
+            value={0.2}
+            style={styles.progressBar}
+            maximumTrackTintColor={'grey'}
+            onValueChange={val => valueChange(val, index)}
+            thumbTintColor={themeColor}
+            minimumTrackTintColor={themeColor}
+          />
+        </View>
       </View>
     );
   };
@@ -101,6 +135,7 @@ const App = () => {
 
   useEffect(() => {
     setMusicAdded(false);
+    setThemeColor(musicList[activeId].themeColor);
   }, [activeId]);
 
   useEffect(() => {
@@ -111,7 +146,9 @@ const App = () => {
     <View style={styles.container}>
       <StatusBar hidden />
       <View style={styles.header}>
-        <Text style={styles.headerText}>LOFI STATION</Text>
+        <Text style={[styles.headerText, {color: themeColor}]}>
+          LOFI STATION
+        </Text>
       </View>
       <FlatList
         data={musicList}
