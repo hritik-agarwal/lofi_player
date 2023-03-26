@@ -111,7 +111,7 @@ const App = () => {
     <View style={styles.container}>
       <StatusBar hidden />
       <View style={styles.header}>
-        <Text style={styles.headerText}>LOFI PLAYER</Text>
+        <Text style={styles.headerText}>LOFI STATION</Text>
       </View>
       <FlatList
         data={musicList}
