@@ -14,6 +14,7 @@ import {ambientSoundList, musicList} from './musicList';
 import Slider from '@react-native-community/slider';
 import Modal from 'react-native-modal';
 import Sound from 'react-native-sound';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const App = () => {
   // utility variables
@@ -24,12 +25,11 @@ const App = () => {
   const [showMixMusicModal, setShowMixMusicModal] = useState(false);
 
   // audio players and their volume
-  const numAmbientSounds = ambientSoundList.length;
   const [lofiPlayer, setLofiPlayer] = useState(null);
   const [lofPlayerSound, setLofiPlayerSound] = useState(0.5);
   const [ambientSoundPlayers, setAmbientSoundPlayers] = useState(null);
   const [ambientSoundVolume, setAmbientSoundVolume] = useState(
-    Array(numAmbientSounds).fill(0),
+    Array(ambientSoundList.length).fill(0),
   );
 
   // Utility Functions
@@ -58,7 +58,28 @@ const App = () => {
 
   // Modal Functions
   const closeModal = () => setShowMixMusicModal(false);
-  const onPressSaveSettings = () => {};
+  const fetchAmbientSound = async () => {
+    try {
+      const data = await AsyncStorage.getItem('ambientSound');
+      if (data) {
+        const value = JSON.parse(data);
+        setAmbientSoundVolume(value);
+        getAmbientSoundPlayers(value);
+      } else {
+        getAmbientSoundPlayers(Array(ambientSoundList.length).fill(0));
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  };
+  const onPressSaveSettings = async () => {
+    try {
+      const value = JSON.stringify(ambientSoundVolume);
+      await AsyncStorage.setItem('ambientSound', value);
+    } catch (e) {
+      console.log(e);
+    }
+  };
 
   // Lofi Player Functions
   const stopPlay = () => lofiPlayer.pause();
@@ -99,14 +120,14 @@ const App = () => {
       });
     }
   };
-  const getAmbientSoundPlayers = async () => {
+  const getAmbientSoundPlayers = async volume => {
     if (ambientSoundPlayers) return;
-    const players = ambientSoundList.map(item => {
+    const players = ambientSoundList.map((item, index) => {
       const player = new Sound(item.musicFile, Sound.MAIN_BUNDLE);
       player.setNumberOfLoops(-1);
       setTimeout(() => {
         player.play();
-        player.setVolume(0);
+        player.setVolume(volume[index]);
       }, 500);
       return player;
     });
@@ -209,6 +230,7 @@ const App = () => {
 
   // Lofi Player Triggers
   useEffect(() => {
+    fetchAmbientSound();
     return () => {
       if (lofiPlayer) lofiPlayer.release();
       if (ambientSoundPlayers)
@@ -225,7 +247,6 @@ const App = () => {
 
   // Ambinet Player Triggers
   useEffect(() => {
-    getAmbientSoundPlayers();
     startMixMusicIconAnimation();
   }, []);
 
@@ -262,7 +283,12 @@ const App = () => {
           style={styles.plusIcon}
         />
       </TouchableOpacity>
-      <Modal isVisible={showMixMusicModal} onBackdropPress={closeModal}>
+      <Modal
+        animationInTiming={500}
+        animationOutTiming={1000}
+        isVisible={showMixMusicModal}
+        onBackdropPress={closeModal}
+        onBackButtonPress={closeModal}>
         <View style={styles.modalContainer}>
           <View style={styles.modalButtons}>
             <TouchableOpacity
