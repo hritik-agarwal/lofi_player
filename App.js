@@ -8,23 +8,37 @@ import {
   Animated,
   FlatList,
 } from 'react-native';
-import TrackPlayer, {RepeatMode} from 'react-native-track-player';
 import {styles} from './AppStyles';
-import {hp, images} from './constants';
-import {musicList} from './musicList';
+import {hp, images, wp} from './constants';
+import {ambientSoundList, musicList} from './musicList';
 import Slider from '@react-native-community/slider';
 import Modal from 'react-native-modal';
+import Sound from 'react-native-sound';
 
 const App = () => {
-  const [activeId, setActiveId] = useState(0);
+  // utility variables
   const [playing, setPlaying] = useState(false);
   const [musicAdded, setMusicAdded] = useState(false);
   const [themeColor, setThemeColor] = useState('pink');
+  const [activeMusicIndex, setActiveMusicIndex] = useState(0);
   const [showMixMusicModal, setShowMixMusicModal] = useState(false);
 
-  const closeModal = () => setShowMixMusicModal(false);
+  // audio players and their volume
+  const numAmbientSounds = ambientSoundList.length;
+  const [lofiPlayer, setLofiPlayer] = useState(null);
+  const [lofPlayerSound, setLofiPlayerSound] = useState(0.5);
+  const [ambientSoundPlayers, setAmbientSoundPlayers] = useState(null);
+  const [ambientSoundVolume, setAmbientSoundVolume] = useState(
+    Array(numAmbientSounds).fill(0),
+  );
 
+  // Utility Functions
+  const getAnim = (anim, toValue, delay, duration) =>
+    Animated.timing(anim, {toValue, delay, duration, useNativeDriver: false});
+
+  // Animation Variables and Functions
   const scrollY = useRef(new Animated.Value(0)).current;
+  const widthRef = useRef(new Animated.Value(0)).current;
   const playerHeightAnim = scrollY.interpolate({
     inputRange: [0, (hp(30) - hp(10)) * 2],
     outputRange: [hp(30), hp(10)],
@@ -35,41 +49,79 @@ const App = () => {
     outputRange: [hp(20), hp(0)],
     extrapolate: 'clamp',
   });
+  const onScroll = e => scrollY.setValue(e.nativeEvent.contentOffset.y);
+  const startMixMusicIconAnimation = () => {
+    getAnim(widthRef, wp(50), 0, 1000).start(() => {
+      getAnim(widthRef, 0, 2000, 1000).start();
+    });
+  };
 
+  // Modal Functions
+  const closeModal = () => setShowMixMusicModal(false);
+  const onPressSaveSettings = () => {};
+
+  // Lofi Player Functions
+  const stopPlay = () => lofiPlayer.pause();
   const onPressPlayPause = () => {
     playing ? stopPlay() : startPlay();
     setPlaying(prev => !prev);
   };
-
-  const startMusicPlayer = async () => {
-    await TrackPlayer.setupPlayer();
-    await TrackPlayer.setRepeatMode(RepeatMode.Track);
-  };
-
-  const onScroll = e => {
-    const offsetY = e.nativeEvent.contentOffset.y;
-    scrollY.setValue(offsetY);
-  };
-
   const startPlay = async () => {
-    if (!musicAdded) {
-      await TrackPlayer.reset();
-      await TrackPlayer.add([{url: musicList[activeId].musicFile}]);
+    if (musicAdded) lofiPlayer.play();
+    else {
+      if (lofiPlayer) lofiPlayer.release();
+      const player = new Sound(
+        musicList[activeMusicIndex].musicFile,
+        Sound.MAIN_BUNDLE,
+      );
       setMusicAdded(true);
+      setLofiPlayer(player);
+      player.getNumberOfLoops(-1);
+      setTimeout(() => {
+        player.play();
+        player.setVolume(0.3);
+      }, 500);
     }
-    await TrackPlayer.play();
   };
 
-  const stopPlay = async () => {
-    await TrackPlayer.pause();
+  // Ambient Player Functions
+  const volumeChange = async (value, index, type = 'ambient') => {
+    if (type === 'lofi') lofiPlayer.setVolume(value);
+    else ambientSoundPlayers[index].setVolume(value);
+  };
+  const valueChange = (value, index, type = 'ambient') => {
+    if (type === 'lofi') setLofiPlayerSound(value);
+    else {
+      setAmbientSoundVolume(prev => {
+        const newList = [...prev];
+        newList[index] = value;
+        return newList;
+      });
+    }
+  };
+  const getAmbientSoundPlayers = async () => {
+    if (ambientSoundPlayers) return;
+    const players = ambientSoundList.map(item => {
+      const player = new Sound(item.musicFile, Sound.MAIN_BUNDLE);
+      player.setNumberOfLoops(-1);
+      setTimeout(() => {
+        player.play();
+        player.setVolume(0);
+      }, 500);
+      return player;
+    });
+    setAmbientSoundPlayers(players);
+  };
+  const onPressResetValues = () => {
+    ambientSoundPlayers.forEach(player => {
+      player.setVolume(0);
+    });
+    setAmbientSoundVolume(Array(ambientSoundList.length).fill(0));
   };
 
-  const valueChange = (val, index) => {
-    // console.log({val}, {index});
-  };
-
+  // Components
   const playerBox = () => {
-    const {name, musicCover} = musicList[activeId];
+    const {name, musicCover} = musicList[activeMusicIndex];
     return (
       <View style={styles.playerContainer}>
         <Animated.View
@@ -108,7 +160,6 @@ const App = () => {
       </View>
     );
   };
-
   const renderItemLofiMusic = ({item, index}) => {
     return (
       <View key={index} style={styles.musicCard}>
@@ -117,54 +168,66 @@ const App = () => {
           source={item.musicCover}
           style={styles.musicCover}
         />
-        <TouchableOpacity onPress={() => setActiveId(index)}>
+        <TouchableOpacity onPress={() => setActiveMusicIndex(index)}>
           <Text
-            style={[styles.musicName, activeId === index && {color: 'white'}]}>
+            style={[
+              styles.musicName,
+              activeMusicIndex === index && {color: 'white'},
+            ]}>
             {item.name}
           </Text>
         </TouchableOpacity>
       </View>
     );
   };
-
-  const renderItemWhiteMusic = ({item, index}) => {
+  const renderItemAmbientMusic = ({item, index}) => {
     return (
       <View key={index} style={styles.musicCard}>
         <FastImage
-          resizeMode="cover"
+          resizeMode="contain"
           source={item.musicCover}
-          style={styles.musicCover}
+          style={styles.ambineSoundCover}
         />
         <View>
-          <TouchableOpacity onPress={() => setActiveId(index)}>
-            <Text style={styles.musicName}>{item.name}</Text>
-          </TouchableOpacity>
+          <Text style={[styles.musicName, {color: item.color}]}>
+            {item.name}
+          </Text>
           <Slider
-            value={0.2}
+            value={ambientSoundVolume[index]}
             tapToSeek={true}
             style={styles.progressBar}
             thumbTintColor={themeColor}
             maximumTrackTintColor={'grey'}
             minimumTrackTintColor={themeColor}
             onValueChange={val => valueChange(val, index)}
+            onSlidingComplete={val => volumeChange(val, index)}
           />
         </View>
       </View>
     );
   };
 
+  // Lofi Player Triggers
   useEffect(() => {
-    startMusicPlayer();
+    return () => {
+      if (lofiPlayer) lofiPlayer.release();
+      if (ambientSoundPlayers)
+        ambientSoundPlayers.forEach(player => player.release());
+    };
   }, []);
-
-  useEffect(() => {
-    setMusicAdded(false);
-    setThemeColor(musicList[activeId].themeColor);
-  }, [activeId]);
-
   useEffect(() => {
     if (!musicAdded && playing) startPlay();
   }, [musicAdded, playing]);
+  useEffect(() => {
+    setMusicAdded(false);
+    setThemeColor(musicList[activeMusicIndex].themeColor);
+  }, [activeMusicIndex]);
+
+  // Ambinet Player Triggers
+  useEffect(() => {
+    getAmbientSoundPlayers();
+    startMixMusicIconAnimation();
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -188,6 +251,11 @@ const App = () => {
       <TouchableOpacity
         onPress={() => setShowMixMusicModal(true)}
         style={[styles.plusIconBox, {backgroundColor: themeColor}]}>
+        <Animated.View style={{width: widthRef}}>
+          <Text numberOfLines={1} style={styles.mixMusicText}>
+            Mix Ambient Sounds
+          </Text>
+        </Animated.View>
         <FastImage
           resizeMode="contain"
           source={images.plus}
@@ -196,12 +264,23 @@ const App = () => {
       </TouchableOpacity>
       <Modal isVisible={showMixMusicModal} onBackdropPress={closeModal}>
         <View style={styles.modalContainer}>
-          <Text style={styles.mixMusicText}>Mix White Music</Text>
+          <View style={styles.modalButtons}>
+            <TouchableOpacity
+              onPress={onPressResetValues}
+              style={styles.resetValueBox}>
+              <Text style={styles.resetValueText}>Reset Values</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={onPressSaveSettings}
+              style={styles.resetValueBox}>
+              <Text style={styles.resetValueText}>Save Settings</Text>
+            </TouchableOpacity>
+          </View>
           <FlatList
-            data={musicList}
+            data={ambientSoundList}
             decelerationRate={0.99}
             style={styles.musicList}
-            renderItem={renderItemWhiteMusic}
+            renderItem={renderItemAmbientMusic}
             showsVerticalScrollIndicator={false}
           />
         </View>

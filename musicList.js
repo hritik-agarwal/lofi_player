@@ -61,3 +61,48 @@ export const musicList = [
     musicCover: require('./assets/images/musicCover/waves-of-nostalgia.jpg'),
   },
 ];
+
+export const ambientSoundList = [
+  {
+    id: '1',
+    name: 'Waves',
+    color: '#fe7a72',
+    musicFile: require('./assets/music/ambientSounds/waves.mp3'),
+    musicCover: require('./assets/images/ambientSoundIcons/waves.png'),
+  },
+  {
+    id: '2',
+    name: 'Campfire',
+    color: '#ff7c2f',
+    musicFile: require('./assets/music/ambientSounds/campfire.mp3'),
+    musicCover: require('./assets/images/ambientSoundIcons/campfire.png'),
+  },
+  {
+    id: '3',
+    name: 'Thunder',
+    color: '#fdc509',
+    musicFile: require('./assets/music/ambientSounds/thunder.mp3'),
+    musicCover: require('./assets/images/ambientSoundIcons/thunder.png'),
+  },
+  {
+    id: '4',
+    name: 'River',
+    color: '#019ebc',
+    musicFile: require('./assets/music/ambientSounds/river.mp3'),
+    musicCover: require('./assets/images/ambientSoundIcons/river.png'),
+  },
+  {
+    id: '5',
+    name: 'Rain',
+    color: '#8bcdfe',
+    musicFile: require('./assets/music/ambientSounds/rain.mp3'),
+    musicCover: require('./assets/images/ambientSoundIcons/rain.png'),
+  },
+  {
+    id: '6',
+    name: 'Night',
+    color: '#8595ba',
+    musicFile: require('./assets/music/ambientSounds/night.mp3'),
+    musicCover: require('./assets/images/ambientSoundIcons/night.png'),
+  },
+];
