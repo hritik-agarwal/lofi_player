@@ -97,10 +97,10 @@ const App = () => {
       );
       setMusicAdded(true);
       setLofiPlayer(player);
-      player.getNumberOfLoops(-1);
       setTimeout(() => {
         player.play();
         player.setVolume(0.3);
+        player.setNumberOfLoops(-1);
       }, 500);
     }
   };
@@ -124,9 +124,9 @@ const App = () => {
     if (ambientSoundPlayers) return;
     const players = ambientSoundList.map((item, index) => {
       const player = new Sound(item.musicFile, Sound.MAIN_BUNDLE);
-      player.setNumberOfLoops(-1);
       setTimeout(() => {
         player.play();
+        player.setNumberOfLoops(-1);
         player.setVolume(volume[index]);
       }, 500);
       return player;
