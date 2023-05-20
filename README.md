@@ -12,11 +12,10 @@ This is an app to listen to chill Lo-fi beats and ambient sounds like wind, wate
 3. Individual sound volume control
 
 ## Screenshots :-
-
 <p>
-   <img src="https://github.com/hritik-agarwal/lofi_player/blob/main/assets/images/A.png" width="300" />
-   <img src="https://github.com/hritik-agarwal/lofi_player/blob/main/assets/images/B.png" width="300" />
-   <img src="https://github.com/hritik-agarwal/lofi_player/blob/main/assets/images/C.png" width="300" />
+   <img src="https://drive.google.com/uc?export=view&id=1u6Md9S15y3Bd4Rvw-CfN7i0M85bKVIil" width="300" />
+   <img src="https://drive.google.com/uc?export=view&id=1Tpa98-_0AUEdsqtT88Gg3NEsgET2Hdr6" width="300" />
+   <img src="https://drive.google.com/uc?export=view&id=1fp8A6J8cE79HwLibw4bmvZ7opuXSUYmJ" width="300" />
 </p>
 
 ## See App :-
